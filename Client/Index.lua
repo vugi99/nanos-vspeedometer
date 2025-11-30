@@ -60,12 +60,11 @@ end
 VehicleWheeled.Subscribe("CharacterLeave", CharacterLeaveVehicle)
 VehicleWater.Subscribe("CharacterLeave", CharacterLeaveVehicle)
 
-
 local function PlayerLoaded(local_player)
     local char = local_player:GetControlledCharacter()
-    if char then
+    if char and char:IsValid() then
         local veh = char:GetVehicle()
-        if veh then
+        if veh and veh:IsValid() then
             local driver = veh:GetPassenger(0)
             if ((driver == char) or VSpeedometer.ShowForPassengers) then
                 VSpeedometer.VSpeedometer_UI:SetVisibility(WidgetVisibility.VisibleNotHitTestable)
@@ -78,6 +77,22 @@ if Client.GetLocalPlayer() then
 else
     Client.Subscribe("SpawnLocalPlayer", PlayerLoaded)
 end
+
+local function ReloadVehicleSpawn(veh)
+    if veh:IsValid() then
+        local char = veh:GetPassenger(0)
+        if char and char:IsValid() then
+            local ply = char:GetPlayer()
+            if ply:IsValid() and ply == Client.GetLocalPlayer() then
+                PlayerLoaded(Client.GetLocalPlayer())
+                VehicleWheeled.Unsubscribe("Spawn", ReloadVehicleSpawn)
+                VehicleWater.Unsubscribe("Spawn", ReloadVehicleSpawn)
+            end
+        end
+    end
+end
+VehicleWheeled.Subscribe("Spawn", ReloadVehicleSpawn)
+VehicleWater.Subscribe("Spawn", ReloadVehicleSpawn)
 
 Timer.SetInterval(function()
     if VSpeedometer.VSpeedometer_UI then
